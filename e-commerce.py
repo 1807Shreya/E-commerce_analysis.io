@@ -1,8 +1,8 @@
 import pandas as pd
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
 import sys
+import io
 import numpy as np
+import textwrap
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
@@ -10,49 +10,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report, confusion_matrix
     
-df=pd.read_excel('E-commerce customer analysis.xlsx')
+df=pd.read_excel('E-commerce_reviews_tb.xlsx',sheet_name=' E-commerce_reviews')
 #print(df.head())
-
-def parse_date(date_str):
-    if pd.isna(date_str):
-        return pd.NaT
-
-    date_str = str(date_str).strip().lower()
-
-    # Handle relative date like "8 months ago"
-    if 'ago' in date_str:
-        try:
-            number = int(date_str.split()[0])
-            unit = date_str.split()[1]
-
-            today = datetime.today()
-            if 'month' in unit:
-                return today - relativedelta(months=number)
-            elif 'day' in unit:
-                return today - relativedelta(days=number)
-            elif 'year' in unit:
-                return today - relativedelta(years=number)
-            else:
-                return pd.NaT
-        except:
-            return pd.NaT
-
-    # Handle absolute date like "Feb, 2020"
-    try:
-        return pd.to_datetime(date_str, format='%b, %Y')
-    except:
-        return pd.NaT
-df['clean_date'] = df['date'].apply(parse_date)
-#print(df[['date', 'clean_date']].head(20))
-
-df.to_csv('E-commerce_cleaned_reviews_.csv', index=False)
 #print(df.columns)
-#print(df.info())
 
 #EDA
 
 #Distribution of Ratings
-'''plt.figure(figsize=(8, 5))
+plt.figure(figsize=(8, 5))
 sns.countplot(data=df, x='rating', palette='viridis')
 plt.title('Distribution of Product Ratings')
 plt.xlabel('Rating')
@@ -62,11 +27,15 @@ plt.show()
 #Most Reviewed Products
 top_products = df['product_title'].value_counts().head(10)
 
+# Wrap product titles to max 30 characters per line
+wrapped_labels = [textwrap.fill(label, width=30) for label in top_products.index]
+
 plt.figure(figsize=(10, 6))
-sns.barplot(y=top_products.index, x=top_products.values, palette='Blues_r')
+sns.barplot(y=wrapped_labels, x=top_products.values, palette='Blues_r')
 plt.title('Top 10 Most Reviewed Products')
 plt.xlabel('Number of Reviews')
 plt.ylabel('Product')
+plt.tight_layout()
 plt.show()
 
 # Review Length Distribution
@@ -79,29 +48,27 @@ plt.xlabel('Words in Review')
 plt.ylabel('Frequency')
 plt.show()
 
-#Ratings Over Time
-df['clean_date'] = pd.to_datetime(df['clean_date'])
-
-monthly_avg = df.set_index('clean_date').resample('M').agg({'rating': 'mean'}).reset_index()
-
-plt.figure(figsize=(12, 6))
-sns.lineplot(data=monthly_avg, x='clean_date', y='rating', marker='o')
-plt.title(' Monthly Average Rating Over Time')
-plt.xlabel('Month')
-plt.ylabel('Average Rating')
+#Ratings vs. Sentiment
+sns.boxplot(data=df, x='sentiment', y='rating')
+plt.title('Rating Distribution by Sentiment')
+plt.xlabel('Sentiment')
+plt.ylabel('Rating')
 plt.grid(True)
-plt.show()'''
+plt.show()
+
+# Force UTF-8 encoding for stdout
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 df['helpfulness'] = df['upvotes'] - df['downvotes']
 top_helpful = df.sort_values(by='helpfulness', ascending=False).head(10)
 
 for i, row in top_helpful.iterrows():
-    '''print(f"\n Review #{i}")
+    print(f"\n Review #{i}")
     print(f"Product: {row['product_title']}")
     print(f"Rating: {row['rating']}")
     print(f"Upvotes: {row['upvotes']} | Downvotes: {row['downvotes']} | Helpfulness: {row['helpfulness']}")
     print(f"Summary: {row['summary']}")
-    print(f"Review: {row['review'][:300]}...")'''
+    print(f"Review: {row['review'][:300]}...")
  
  # Replace True/False and NaN with empty string
 df['review'] = df['review'].apply(lambda x: str(x) if isinstance(x, str) else '')
@@ -126,10 +93,10 @@ def get_sentiment(text):
 df['sentiment'] = df['review'].apply(get_sentiment)
 
 # Check results
-'''print(df['sentiment'].value_counts())
+print(df['sentiment'].value_counts())
 
-print(df['review'].unique()[:10])  # See sample values
-print(df['review'].map(type).value_counts())  # Make sure all are str'''
+print(df['review'].unique()[:10])  
+print(df['review'].map(type).value_counts()) 
 
 
 
@@ -159,4 +126,4 @@ y_pred = model.predict(X_test_tfidf)
 print(classification_report(y_test, y_pred))
 print(confusion_matrix(y_test, y_pred))
 
-df.to_csv('final E-commerce_reviews_.csv', index=False)
+df.to_excel('E-commerce_reviews_tb.xlsx', index=False)
