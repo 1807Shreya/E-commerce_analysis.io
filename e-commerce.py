@@ -10,13 +10,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report, confusion_matrix
     
-df=pd.read_excel('E-commerce_reviews_tb.xlsx',sheet_name=' E-commerce_reviews')
+df=pd.read_excel('E-commerce_reviews_tb.xlsx')
 #print(df.head())
 #print(df.columns)
 
 #EDA
 
-#Distribution of Ratings
+'''#Distribution of Ratings
 plt.figure(figsize=(8, 5))
 sns.countplot(data=df, x='rating', palette='viridis')
 plt.title('Distribution of Product Ratings')
@@ -46,7 +46,7 @@ sns.histplot(df['review_length'], bins=50, kde=True, color='orchid')
 plt.title('Review Length Distribution (in Words)')
 plt.xlabel('Words in Review')
 plt.ylabel('Frequency')
-plt.show()
+plt.show()'''
 
 #Ratings vs. Sentiment
 sns.boxplot(data=df, x='sentiment', y='rating')
@@ -57,7 +57,7 @@ plt.grid(True)
 plt.show()
 
 # Force UTF-8 encoding for stdout
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+'''sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 df['helpfulness'] = df['upvotes'] - df['downvotes']
 top_helpful = df.sort_values(by='helpfulness', ascending=False).head(10)
@@ -94,7 +94,6 @@ df['sentiment'] = df['review'].apply(get_sentiment)
 
 # Check results
 print(df['sentiment'].value_counts())
-
 print(df['review'].unique()[:10])  
 print(df['review'].map(type).value_counts()) 
 
@@ -126,4 +125,4 @@ y_pred = model.predict(X_test_tfidf)
 print(classification_report(y_test, y_pred))
 print(confusion_matrix(y_test, y_pred))
 
-df.to_excel('E-commerce_reviews_tb.xlsx', index=False)
+df.to_excel('E-commerce_reviews_tb.xlsx', index=False)'''
